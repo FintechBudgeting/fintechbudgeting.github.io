@@ -174,15 +174,7 @@
       cursor: pointer;
     }
 
-    /* MOBILE text clamp - purely visual, no show/hide toggling here */
-    @media (max-width: 480px) {
-      .clamp-text {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        position: relative;
-      }
+
 
       .more-link {
         color: #007acc;
@@ -192,21 +184,9 @@
         user-select: none;
         font-size: 0.8rem;
       }
-    }
 
-    /* On desktop show full text with no clamp */
-    @media (min-width: 481px) {
-      .clamp-text {
-        display: block !important;
-        -webkit-line-clamp: none !important;
-        overflow: visible !important;
-        position: static !important;
-      }
 
-      .more-link {
-        display: none !important;
-      }
-    }
+
 
     /* Columns selector */
     .columns-selector {
