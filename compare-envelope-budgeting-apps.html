@@ -24,6 +24,7 @@
       padding: 0.5rem;
       font-size: 1rem;
     }
+
     /* Wrapper for horizontal scroll on small/mobile */
     #app {
       overflow-x: auto;
@@ -84,7 +85,7 @@
       font-size: 0.8rem;
     }
 
-    .checkbox-center > div {
+    .checkbox-center>div {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -173,7 +174,7 @@
       cursor: pointer;
     }
 
-    /* MOBILE text clamp and toggle styles */
+    /* MOBILE text clamp - purely visual, no show/hide toggling here */
     @media (max-width: 480px) {
       .clamp-text {
         display: -webkit-box;
@@ -193,20 +194,21 @@
       }
     }
 
-    /* On desktop show full text with no clamp and hide "more" link */
+    /* On desktop show full text with no clamp */
     @media (min-width: 481px) {
       .clamp-text {
-        display: block;
-        -webkit-line-clamp: none;
-        overflow: visible;
-        position: static;
+        display: block !important;
+        -webkit-line-clamp: none !important;
+        overflow: visible !important;
+        position: static !important;
       }
 
       .more-link {
-        display: none;
+        display: none !important;
       }
     }
-    /* Styling for columns selector checkboxes */
+
+    /* Columns selector */
     .columns-selector {
       margin-bottom: 1rem;
       user-select: none;
@@ -216,7 +218,6 @@
       margin-right: 1.5rem;
       cursor: pointer;
     }
-
   </style>
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -261,13 +262,15 @@
           </th>
 
           <th v-if="visibleColumns.includes('og_qube')" class="column-header"
-            :aria-sort="sortKey === 'og_qube' ? (sortOrders.og_qube > 0 ? 'ascending' : 'descending') : 'none'" scope="col">
+            :aria-sort="sortKey === 'og_qube' ? (sortOrders.og_qube > 0 ? 'ascending' : 'descending') : 'none'"
+            scope="col">
             OG Qube Money
             <span class="sort-icon" v-if="sortKey === 'og_qube'">{{ sortOrders.og_qube > 0 ? '▲' : '▼' }}</span>
           </th>
 
           <th v-if="visibleColumns.includes('envelope')" class="column-header"
-            :aria-sort="sortKey === 'envelope' ? (sortOrders.envelope > 0 ? 'ascending' : 'descending') : 'none'" scope="col">
+            :aria-sort="sortKey === 'envelope' ? (sortOrders.envelope > 0 ? 'ascending' : 'descending') : 'none'"
+            scope="col">
             Envelope
             <span class="sort-icon" v-if="sortKey === 'envelope'">{{ sortOrders.envelope > 0 ? '▲' : '▼' }}</span>
           </th>
@@ -345,7 +348,7 @@
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script>
-    const { createApp, computed, ref, onMounted } = Vue;
+    const { createApp, computed, ref } = Vue;
 
     // Helper to strip HTML tags to get text content length
     function stripHtml(html) {
@@ -354,31 +357,45 @@
       return tmp.textContent || tmp.innerText || "";
     }
 
-    // ShowMoreText component for clamp + toggle "more", only if text longer than 100 chars
+    // ShowMoreText component avoids CSS show/hide for toggling content
+    // Instead, it renders either truncated or full text based on char count
     const ShowMoreText = {
       props: ['text', 'html'],
       setup(props) {
         const expanded = ref(false);
-        const needsToggle = ref(false);
+        // plainText content stripped from HTML or text
+        const plainText = stripHtml(props.html ?? props.text ?? "");
 
-        onMounted(() => {
-          // Check length of text (strip HTML if needed)
-          const content = props.html ?? props.text ?? "";
-          const plainText = stripHtml(content);
-          needsToggle.value = plainText.length > 100;
-        });
+        // Define the maximum length for truncated text
+        const maxLength = 100;
 
+        // This toggles expanded state
         function toggle() {
           expanded.value = !expanded.value;
         }
 
-        return { expanded, toggle, props, needsToggle };
+        // Return truncated version of plain text
+        const truncatedText = plainText.length > maxLength ? plainText.slice(0, maxLength) + "…" : plainText;
+
+        return { expanded, toggle, plainText, truncatedText, maxLength, props };
       },
       template: `
         <div>
-          <div :class="['clamp-text']" v-html="props.html || props.text" :style="{ display: expanded ? 'block' : '' }" v-show="!expanded"></div>
-          <div v-html="props.html || props.text" v-show="expanded"></div>
-          <span v-if="needsToggle" class="more-link" @click="toggle">{{ expanded ? 'less' : 'more' }}</span>
+          <template v-if="plainText.length <= maxLength">
+            <!-- If text fits, show full text as HTML if present, else text -->
+            <span v-html="props.html" v-if="props.html"></span>
+            <span v-else>{{ props.text }}</span>
+          </template>
+          <template v-else>
+            <span v-if="!expanded">
+              {{ truncatedText }}
+            </span>
+            <span v-else>
+              <span v-html="props.html" v-if="props.html"></span>
+              <span v-else>{{ props.text }}</span>
+            </span>
+            <span class="more-link" @click="toggle">{{ expanded ? 'less' : 'more' }}</span>
+          </template>
         </div>
       `
     };
@@ -864,7 +881,7 @@
           }
         ]);
 
-       function sortBy(key) {
+        function sortBy(key) {
           if (sortKey.value === key) {
             // Toggle sort order between ascending (1) and descending (-1)
             sortOrders.value[key] = -sortOrders.value[key] || 1;
