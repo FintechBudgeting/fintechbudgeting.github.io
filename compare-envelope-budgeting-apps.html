@@ -24,6 +24,10 @@
       padding: 0.5rem;
       font-size: 1rem;
     }
+    /* Wrapper for horizontal scroll on small/mobile */
+    #app {
+      overflow-x: auto;
+    }
 
     table {
       border-collapse: collapse;
@@ -32,10 +36,25 @@
       /* fix column widths */
     }
 
+    /* MIN WIDTH BY COLGROUP */
+    colgroup col:nth-child(1) {
+      width: 35%;
+      min-width: 150px;
+    }
+
+    colgroup col:nth-child(2),
+    colgroup col:nth-child(3),
+    colgroup col:nth-child(4) {
+      width: 21%;
+      min-width: 100px;
+    }
+
     thead {
       background-color: #f4f4f4;
       user-select: none;
-
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     th,
@@ -45,6 +64,7 @@
       text-align: left;
       word-wrap: break-word;
       vertical-align: top;
+      font-size: 0.8rem;
     }
 
     th.column-header {
@@ -64,7 +84,7 @@
       font-size: 0.8rem;
     }
 
-    .checkbox-center>div {
+    .checkbox-center > div {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -76,6 +96,10 @@
       justify-content: center;
       margin-bottom: 0.3rem;
       user-select: none;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 8px;
     }
 
     .notes {
@@ -94,13 +118,6 @@
     a:focus {
       text-decoration: underline;
       outline: none;
-    }
-
-    .checkbox-wrapper {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: 8px;
     }
 
     .custom-checkbox {
@@ -156,17 +173,52 @@
       cursor: pointer;
     }
 
-    thead {
-      background-color: #f4f4f4;
-      user-select: none;
+    /* MOBILE text clamp and toggle styles */
+    @media (max-width: 480px) {
+      .clamp-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        position: relative;
+      }
 
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      .more-link {
+        color: #007acc;
+        cursor: pointer;
+        display: inline-block;
+        margin-top: 0.25em;
+        user-select: none;
+        font-size: 0.8rem;
+      }
     }
+
+    /* On desktop show full text with no clamp and hide "more" link */
+    @media (min-width: 481px) {
+      .clamp-text {
+        display: block;
+        -webkit-line-clamp: none;
+        overflow: visible;
+        position: static;
+      }
+
+      .more-link {
+        display: none;
+      }
+    }
+    /* Styling for columns selector checkboxes */
+    .columns-selector {
+      margin-bottom: 1rem;
+      user-select: none;
+    }
+
+    .columns-selector label {
+      margin-right: 1.5rem;
+      cursor: pointer;
+    }
+
   </style>
   <link rel="stylesheet" href="styles.css" />
-
 </head>
 
 <body>
@@ -181,33 +233,47 @@
   <div id="app">
     <input type="text" v-model="filterText" placeholder="Filter features..." aria-label="Filter features" />
 
+    <div class="columns-selector" role="group" aria-label="Select columns to display">
+      <label>
+        <input type="checkbox" value="og_qube" v-model="visibleColumns" /> OG Qube Money
+      </label>
+      <label>
+        <input type="checkbox" value="envelope" v-model="visibleColumns" /> Envelope
+      </label>
+      <label>
+        <input type="checkbox" value="crew" v-model="visibleColumns" /> Crew
+      </label>
+    </div>
+
     <table>
+      <colgroup>
+        <col />
+        <col v-if="visibleColumns.includes('og_qube')" />
+        <col v-if="visibleColumns.includes('envelope')" />
+        <col v-if="visibleColumns.includes('crew')" />
+      </colgroup>
       <thead>
         <tr>
           <th class="sortable column-header" @click="sortBy('label')"
-            :aria-sort="sortKey === 'label' ? (sortOrders.label > 0 ? 'ascending' : 'descending') : 'none'" scope="col"
-            style="width: 35%;">
+            :aria-sort="sortKey === 'label' ? (sortOrders.label > 0 ? 'ascending' : 'descending') : 'none'" scope="col">
             Feature
             <span class="sort-icon" v-if="sortKey === 'label'">{{ sortOrders.label > 0 ? '▲' : '▼' }}</span>
           </th>
 
-          <th class="column-header"
-            :aria-sort="sortKey === 'og_qube' ? (sortOrders.og_qube > 0 ? 'ascending' : 'descending') : 'none'"
-            scope="col" style="width: 21%;">
+          <th v-if="visibleColumns.includes('og_qube')" class="column-header"
+            :aria-sort="sortKey === 'og_qube' ? (sortOrders.og_qube > 0 ? 'ascending' : 'descending') : 'none'" scope="col">
             OG Qube Money
             <span class="sort-icon" v-if="sortKey === 'og_qube'">{{ sortOrders.og_qube > 0 ? '▲' : '▼' }}</span>
           </th>
 
-          <th class="column-header"
-            :aria-sort="sortKey === 'envelope' ? (sortOrders.envelope > 0 ? 'ascending' : 'descending') : 'none'"
-            scope="col" style="width: 21%;">
+          <th v-if="visibleColumns.includes('envelope')" class="column-header"
+            :aria-sort="sortKey === 'envelope' ? (sortOrders.envelope > 0 ? 'ascending' : 'descending') : 'none'" scope="col">
             Envelope
             <span class="sort-icon" v-if="sortKey === 'envelope'">{{ sortOrders.envelope > 0 ? '▲' : '▼' }}</span>
           </th>
 
-          <th class="column-header"
-            :aria-sort="sortKey === 'crew' ? (sortOrders.crew > 0 ? 'ascending' : 'descending') : 'none'" scope="col"
-            style="width: 21%;">
+          <th v-if="visibleColumns.includes('crew')" class="column-header"
+            :aria-sort="sortKey === 'crew' ? (sortOrders.crew > 0 ? 'ascending' : 'descending') : 'none'" scope="col">
             Crew
             <span class="sort-icon" v-if="sortKey === 'crew'">{{ sortOrders.crew > 0 ? '▲' : '▼' }}</span>
           </th>
@@ -215,9 +281,11 @@
       </thead>
       <tbody>
         <tr v-for="feature in filteredAndSortedFeatures" :key="feature.reservedName">
-          <th scope="row" v-html="feature.label"></th>
+          <th scope="row">
+            <show-more-text :html="feature.label"></show-more-text>
+          </th>
 
-          <td class="checkbox-center">
+          <td v-if="visibleColumns.includes('og_qube')" class="checkbox-center">
             <div>
               <template v-if="typeof feature.og_qube === 'boolean'">
                 <div class="checkbox-wrapper og-qube-checkbox">
@@ -229,13 +297,13 @@
                 </div>
               </template>
               <template v-else-if="feature.og_qube">
-                <div v-html="feature.og_qube"></div>
+                <show-more-text :html="feature.og_qube"></show-more-text>
               </template>
               <div class="notes" v-if="feature.notes && feature.notes.og_qube" v-html="feature.notes.og_qube"></div>
             </div>
           </td>
 
-          <td class="checkbox-center">
+          <td v-if="visibleColumns.includes('envelope')" class="checkbox-center">
             <div>
               <template v-if="typeof feature.envelope === 'boolean'">
                 <div class="checkbox-wrapper envelope-checkbox">
@@ -247,13 +315,13 @@
                 </div>
               </template>
               <template v-else-if="feature.envelope">
-                <div v-html="feature.envelope"></div>
+                <show-more-text :html="feature.envelope"></show-more-text>
               </template>
               <div class="notes" v-if="feature.notes && feature.notes.envelope" v-html="feature.notes.envelope"></div>
             </div>
           </td>
 
-          <td class="checkbox-center">
+          <td v-if="visibleColumns.includes('crew')" class="checkbox-center">
             <div>
               <template v-if="typeof feature.crew === 'boolean'">
                 <div class="checkbox-wrapper crew-checkbox">
@@ -265,28 +333,64 @@
                 </div>
               </template>
               <template v-else-if="feature.crew">
-                <div v-html="feature.crew"></div>
+                <show-more-text :html="feature.crew"></show-more-text>
               </template>
               <div class="notes" v-if="feature.notes && feature.notes.crew" v-html="feature.notes.crew"></div>
             </div>
           </td>
         </tr>
       </tbody>
-
-
     </table>
   </div>
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script>
-    const { createApp, computed, ref } = Vue;
+    const { createApp, computed, ref, onMounted } = Vue;
+
+    // Helper to strip HTML tags to get text content length
+    function stripHtml(html) {
+      const tmp = document.createElement("DIV");
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || "";
+    }
+
+    // ShowMoreText component for clamp + toggle "more", only if text longer than 100 chars
+    const ShowMoreText = {
+      props: ['text', 'html'],
+      setup(props) {
+        const expanded = ref(false);
+        const needsToggle = ref(false);
+
+        onMounted(() => {
+          // Check length of text (strip HTML if needed)
+          const content = props.html ?? props.text ?? "";
+          const plainText = stripHtml(content);
+          needsToggle.value = plainText.length > 100;
+        });
+
+        function toggle() {
+          expanded.value = !expanded.value;
+        }
+
+        return { expanded, toggle, props, needsToggle };
+      },
+      template: `
+        <div>
+          <div :class="['clamp-text']" v-html="props.html || props.text" :style="{ display: expanded ? 'block' : '' }" v-show="!expanded"></div>
+          <div v-html="props.html || props.text" v-show="expanded"></div>
+          <span v-if="needsToggle" class="more-link" @click="toggle">{{ expanded ? 'less' : 'more' }}</span>
+        </div>
+      `
+    };
 
 
     createApp({
+      components: { ShowMoreText },
       setup() {
         const filterText = ref('');
+        const visibleColumns = ref(['og_qube', 'envelope']); // default selected columns
 
-        const sortKey = ref('');  // do not sort by default
+        const sortKey = ref(''); // do not sort by default
         const sortOrders = ref({
           label: 0,
           og_qube: 0,
@@ -295,7 +399,7 @@
         });
 
         const features = ref([
-           {
+          {
             reservedName: "website",
             label: 'Website',
             og_qube: '<a href="https://qubemoney.com/">link</a>',
@@ -338,6 +442,16 @@
             envelope: 'Pacific West Bank. <a href="https://www.reddit.com/r/envelope/comments/1n91xb5/envelopes_partner_bank_loves_them/" target="_blank" rel="noopener noreferrer">Envelope’s Partner bank loves them</a>',
             crew: 'Bangor Savings Bank'
 
+          },
+          {
+            reservedName: "virtual_bill_cards",
+            label: "Virtual Bill Cards",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+            notes: {
+              envelope: "Going live in next update, already in app store review."
+            }
           },
           {
             reservedName: "checking_account",
@@ -750,7 +864,7 @@
           }
         ]);
 
-        function sortBy(key) {
+       function sortBy(key) {
           if (sortKey.value === key) {
             // Toggle sort order between ascending (1) and descending (-1)
             sortOrders.value[key] = -sortOrders.value[key] || 1;
@@ -785,7 +899,7 @@
           });
         });
 
-        return { filterText, features, filteredAndSortedFeatures, sortBy, sortKey, sortOrders };
+        return { filterText, visibleColumns, features, filteredAndSortedFeatures, sortBy, sortKey, sortOrders };
       }
     }).mount('#app');
   </script>
