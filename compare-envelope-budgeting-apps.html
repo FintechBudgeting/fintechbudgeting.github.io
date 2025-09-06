@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Envelope Budgeting Apps Feature Comparison</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      margin-bottom: 1rem;
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      table-layout: fixed;
+      /* fix column widths */
+    }
+
+    thead {
+      background-color: #f4f4f4;
+      user-select: none;
+
+    }
+
+    th,
+    td {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      text-align: left;
+      word-wrap: break-word;
+      vertical-align: top;
+    }
+
+    th.column-header {
+      text-align: center;
+    }
+
+    th.sortable {
+      cursor: pointer;
+    }
+
+    th.sortable:hover {
+      background-color: #e2e8f0;
+    }
+
+    th .sort-icon {
+      margin-left: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .checkbox-center>div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .checkbox-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 0.3rem;
+      user-select: none;
+    }
+
+    .notes {
+      font-size: 0.8rem;
+      color: #555;
+      max-width: 160px;
+      text-align: center;
+    }
+
+    a {
+      color: #007acc;
+      text-decoration: none;
+    }
+
+    a:hover,
+    a:focus {
+      text-decoration: underline;
+      outline: none;
+    }
+
+    .checkbox-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .custom-checkbox {
+      opacity: 0;
+      width: 16px;
+      height: 16px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 2;
+      margin: 0;
+    }
+
+    .checkmark {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      /* Always white by default */
+      border: 2px solid #0073e6;
+      border-radius: 3px;
+      vertical-align: middle;
+      position: relative;
+      z-index: 1;
+      transition: background 0.2s;
+    }
+
+    /* Show checked state */
+    .custom-checkbox:checked+.checkmark,
+    .custom-checkbox:disabled:checked+.checkmark {
+      background-color: #0073e6;
+      border-color: #0073e6;
+    }
+
+    .custom-checkbox:checked+.checkmark::after,
+    .custom-checkbox:disabled:checked+.checkmark::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 5px;
+      width: 4px;
+      height: 8px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Disabled, unchecked remains unfilled (white background) */
+    .custom-checkbox:disabled+.checkmark {
+      background-color: #fff;
+      border-color: #0073e6;
+      opacity: 1;
+      cursor: pointer;
+    }
+
+    thead {
+      background-color: #f4f4f4;
+      user-select: none;
+
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+  </style>
+  <link rel="stylesheet" href="styles.css" />
+
+</head>
+
+<body>
+  <nav class="links" role="navigation" aria-label="Primary navigation">
+    <a href="index.html">Home</a>
+    <a href="envelope.html">Envelope</a>
+    <a href="crew.html">Crew</a>
+    <a href="qube-money.html">Qube Money</a>
+  </nav>
+
+  <h1>Budgeting Apps Feature Comparison</h1>
+  <div id="app">
+    <input type="text" v-model="filterText" placeholder="Filter features..." aria-label="Filter features" />
+
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable column-header" @click="sortBy('label')"
+            :aria-sort="sortKey === 'label' ? (sortOrders.label > 0 ? 'ascending' : 'descending') : 'none'" scope="col"
+            style="width: 35%;">
+            Feature
+            <span class="sort-icon" v-if="sortKey === 'label'">{{ sortOrders.label > 0 ? '▲' : '▼' }}</span>
+          </th>
+
+          <th class="column-header"
+            :aria-sort="sortKey === 'og_qube' ? (sortOrders.og_qube > 0 ? 'ascending' : 'descending') : 'none'"
+            scope="col" style="width: 21%;">
+            OG Qube Money
+            <span class="sort-icon" v-if="sortKey === 'og_qube'">{{ sortOrders.og_qube > 0 ? '▲' : '▼' }}</span>
+          </th>
+
+          <th class="column-header"
+            :aria-sort="sortKey === 'envelope' ? (sortOrders.envelope > 0 ? 'ascending' : 'descending') : 'none'"
+            scope="col" style="width: 21%;">
+            Envelope
+            <span class="sort-icon" v-if="sortKey === 'envelope'">{{ sortOrders.envelope > 0 ? '▲' : '▼' }}</span>
+          </th>
+
+          <th class="column-header"
+            :aria-sort="sortKey === 'crew' ? (sortOrders.crew > 0 ? 'ascending' : 'descending') : 'none'" scope="col"
+            style="width: 21%;">
+            Crew
+            <span class="sort-icon" v-if="sortKey === 'crew'">{{ sortOrders.crew > 0 ? '▲' : '▼' }}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="feature in filteredAndSortedFeatures" :key="feature.reservedName">
+          <th scope="row" v-html="feature.label"></th>
+
+          <td class="checkbox-center">
+            <div>
+              <template v-if="typeof feature.og_qube === 'boolean'">
+                <div class="checkbox-wrapper og-qube-checkbox">
+                  <label>
+                    <input type="checkbox" class="custom-checkbox" :checked="feature.og_qube" disabled
+                      aria-label="OG Qube has feature" />
+                    <span class="checkmark"></span>
+                  </label>
+                </div>
+              </template>
+              <template v-else-if="feature.og_qube">
+                <div v-html="feature.og_qube"></div>
+              </template>
+              <div class="notes" v-if="feature.notes && feature.notes.og_qube" v-html="feature.notes.og_qube"></div>
+            </div>
+          </td>
+
+          <td class="checkbox-center">
+            <div>
+              <template v-if="typeof feature.envelope === 'boolean'">
+                <div class="checkbox-wrapper envelope-checkbox">
+                  <label>
+                    <input type="checkbox" class="custom-checkbox" :checked="feature.envelope" disabled
+                      aria-label="Envelope has feature" />
+                    <span class="checkmark"></span>
+                  </label>
+                </div>
+              </template>
+              <template v-else-if="feature.envelope">
+                <div v-html="feature.envelope"></div>
+              </template>
+              <div class="notes" v-if="feature.notes && feature.notes.envelope" v-html="feature.notes.envelope"></div>
+            </div>
+          </td>
+
+          <td class="checkbox-center">
+            <div>
+              <template v-if="typeof feature.crew === 'boolean'">
+                <div class="checkbox-wrapper crew-checkbox">
+                  <label>
+                    <input type="checkbox" class="custom-checkbox" :checked="feature.crew" disabled
+                      aria-label="Crew has feature" />
+                    <span class="checkmark"></span>
+                  </label>
+                </div>
+              </template>
+              <template v-else-if="feature.crew">
+                <div v-html="feature.crew"></div>
+              </template>
+              <div class="notes" v-if="feature.notes && feature.notes.crew" v-html="feature.notes.crew"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+
+
+    </table>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp, computed, ref } = Vue;
+
+
+    createApp({
+      setup() {
+        const filterText = ref('');
+
+        const sortKey = ref('');  // do not sort by default
+        const sortOrders = ref({
+          label: 0,
+          og_qube: 0,
+          envelope: 0,
+          crew: 0,
+        });
+
+        const features = ref([
+          {
+            reservedName: "1_vibes",
+            label: "Vibes ✨",
+            og_qube: '💔 (OG Qube is "on pause" as they lost their sponsor bank)',
+            envelope: 'Slick UX, uncomplicated, calm and thoughtful, 6 year runway, husband-wife team',
+            crew: 'New kid on the block. Largest team, most features. VC-backed, Complex: With our smart rules editor you can do anything! We are gonna support all the things!',
+
+          },
+          {
+            reservedName: "comparison_to_og_qube",
+            label: "FAQ for OG Qube users",
+            og_qube: '💔',
+            envelope: '<a href="https://help.envelopebudgeting.com/en/articles/12123294-envelope-faq-for-qube-users">Envelope FAQ for Qube Users</a>',
+            crew: '<a href="https://www.reddit.com/r/TryCrew/comments/1n4nfnt/faq_for_qube_customers/">Crew FAQ for Qube Customers</a>',
+
+          },
+          {
+            reservedName: "video_intro",
+            label: "Video Intro",
+            envelope: 'Coming soon',
+            crew: '<a href="https://www.youtube.com/watch?v=YbiFR7typMU">Envelope budgeting in Crew</a>'
+          },
+          {
+            reservedName: "bank_name",
+            label: "Bank Name",
+            og_qube: 'Was Choice Financial Group. Lost bank support in Sep 2025 (did not give Qube Money extension to finish changing banks, new bank dropped them too).',
+            envelope: 'Pacific West Bank. <a href="https://www.reddit.com/r/envelope/comments/1n91xb5/envelopes_partner_bank_loves_them/" target="_blank" rel="noopener noreferrer">Envelope’s Partner bank loves them</a>',
+            crew: 'Bangor Savings Bank'
+
+          },
+          {
+            reservedName: "checking_account",
+            label: "Checking Account",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "savings_account",
+            label: "Savings Account",
+            og_qube: false,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "investing_options",
+            label: "Investing Options",
+            og_qube: false,
+            envelope: false,
+            crew: false,
+            notes: {
+              crew: 'Crew aspires to add this'
+            }
+          },
+          {
+            reservedName: "joint_account_option",
+            label: "Joint Account Option",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "expense_alternative",
+            label: "Expense Alternative",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "goal_alternative",
+            label: "Goal Alternative",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "safe_to_spend_alt",
+            label: "Safe To Spend Alternative",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "auto_save_roundup",
+            label: "Auto Save (round up)",
+            og_qube: false,
+            envelope: false,
+            crew: true,
+          },
+          {
+            reservedName: "savings_rate",
+            label: "Savings Rate",
+            envelope: '3.7% API on "Protected Savings" envelope (cannot be subdivided)',
+            crew: '3.7% APY on <b>your entire balance!</b>',
+          },
+          {
+            reservedName: "online_bill_pay",
+            label: "Online Bill Pay",
+            og_qube: false,
+            envelope: false,
+            crew: false,
+          },
+          {
+            reservedName: "mobile_check_deposit",
+            label: "Mobile Check Deposit",
+            og_qube: false,
+            envelope: true,
+            crew: false,
+          },
+          {
+            reservedName: "checks",
+            label: "Checks",
+            og_qube: true,
+            envelope: true,
+            crew: false,
+            notes: {
+              og_qube: 'You could order checks yourself.',
+              envelope: 'Button in the app to order checks.'
+            }
+          },
+          {
+            reservedName: "venmo",
+            label: "Venmo",
+            og_qube: true,
+            envelope: false,
+            crew: false,
+          },
+          {
+            reservedName: "zelle",
+            label: "Zelle",
+            og_qube: false,
+            envelope: false,
+            crew: false,
+          },
+          {
+            reservedName: "outgoing_wires",
+            label: "Outgoing Wires",
+            og_qube: false,
+            envelope: true,
+            crew: true,
+            notes: {
+              envelope: 'Message support and they can send the wire for you',
+              crew: '$20 fee for wire transfers if your blance is <$50K'
+            }
+          },
+          {
+            reservedName: "incoming_wires",
+            label: "Incoming Wires",
+            og_qube: false,
+            envelope: true,
+            crew: true,
+            notes: {
+              envelope: 'Domestic incoming wires are supported',
+              crew: '$20 fee for wire transfers if your blance is <$50K'
+            }
+          },
+
+          {
+            reservedName: "business_banking",
+            label: "Business Banking",
+            og_qube: false,
+            envelope: false,
+            crew: false,
+          },
+          {
+            reservedName: "instant_internal_account_transfers",
+            label: "Instant Internal Account Transfers",
+            og_qube: true,
+            envelope: true,
+            crew: true
+          },
+          {
+            reservedName: "instant_tranfers_to_other_app_users",
+            label: "Instant Transfers To Other Users of Same App",
+            og_qube: true,
+            envelope: false,
+            crew: '"Could be instantaneous, could take a bit if it gets manually reviewed." — <a href="https://discord.com/channels/1411774302860349572/1413649616288616549/1413706013575479418">source</a> see <a href="crew.html">Crew page</a> for Discord invite link so that link will work for you.',
+            notes: {
+              envelope: 'Feature request in Discord <a href="https://discord.com/channels/972996889580564490/1412219385073897562/1412219385073897562">here</a>. To join the discord to access link see Discord link on the <a href="envelope.html>Envelope overview page</a>'
+            }
+          },
+          {
+            reservedName: "automatic_goal_funding",
+            label: "Automatic Goal funding",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "automatic_expense_funding",
+            label: "Automatic expense funding",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "automatic_goal_expense_spending",
+            label: "Automatic goal/ expense spending",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "early_direct_deposit",
+            label: "Early Direct Deposit",
+            og_qube: false,
+            envelope: true,
+            crew: false,
+            notes: {
+              envelope: '<a href="https://help.envelopebudgeting.com/en/articles/9389710-announcing-early-direct-deposit">Announcing Early Direct Deposit</a>'
+            }
+          },
+
+          {
+            reservedName: "cash_deposit",
+            label: "Cash Deposit",
+            og_qube: false,
+            envelope: true,
+            crew: false,
+            notes: {
+              envelope: 'Supported by AllPoint ATMs that accept cash',
+              crew: 'About to be in beta'
+            }
+          },
+          {
+            reservedName: "cash_back_rewards",
+            label: "Cash Back / Rewards",
+            og_qube: false,
+            envelope: false,
+            crew: false,
+            notes: {
+              crew: 'Crew seems most likely to innovate here. They are discussing adding a "charge card" basically a secured credit card.<a href="https://discord.com/channels/1411774302860349572/1412651947202445312/1412824747703537704">Source</a>. For invite to the discord so you can see that link see <a href="crew.html">Crew overview page</a>'
+            }
+          },
+          {
+            reservedName: "ach_transfers",
+            label: "ACH Transfers",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "transaction_notifications",
+            label: "Transaction Notifications",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "apple_pay",
+            label: "Apple Pay",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "google_pay",
+            label: "Google Pay",
+            // og_qube: false,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "monthly_fees",
+            label: "Fees (recurring fee)",
+            og_qube: '$12/mo (family $19/mo)',
+            envelope: 'Billed at $40 annually. You will pay that after a 30 day trial. Waived each year after that if you spend at least $5,000',
+            crew: 'Free (but talk of perhaps adding one if you do not use account enough)',
+          },
+          {
+            reservedName: "auto_save_auto_transfer",
+            label: "Auto Save (auto transfer)",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "csv_json_export",
+            label: "CSV/JSON Export",
+            og_qube: false,
+            envelope: 'You can message support to request a CSV export',
+            crew: false,
+          },
+          {
+            reservedName: "graphical_spending_analysis",
+            label: "Graphical Spending analysis like simple",
+            envelope: 'TBD',
+            crew: 'TBD',
+          },
+          {
+            reservedName: "transfer_limit",
+            label: "Transfer Limit",
+            og_qube: '',
+            envelope: '$5K card limit, $5K ACH limit for transfers intitiated on Envelope, $5K check limits, $500 ATM, and no limit on received ACH.',
+            crew: '',
+            notes: {
+              envelope: '(<a href="https://discord.com/channels/972996889580564490/989710973348753518/1413221981024948426">source for limits</a>). To be able to get to that link join the Envelope discord using link on the <a href="envelope.html">Envelope overview page</a>'
+            }
+          },
+          {
+            reservedName: "dark_mode_ui",
+            label: "Dark Mode UI",
+            og_qube: true,
+            envelope: true,
+            crew: false,
+            notes: { envelope: 'Dark mode is only UI' }
+          },
+          {
+            reservedName: "two_factor_auth",
+            label: "2FA",
+            og_qube: false,
+            envelope: true,
+            crew: true,
+            notes: {
+              envelope: 'Supports SMS only (Authentictor app support coming later)'
+            }
+          },
+          {
+            reservedName: "kids_teen_accounts",
+            label: "Kids Teen Accounts",
+            og_qube: true,
+            envelope: false,
+            crew: true,
+          },
+          {
+            reservedName: "custom_notes_on_transactions",
+            label: "Custom notes on transactions",
+            og_qube: true,
+            envelope: false,
+            crew: true,
+          },
+          {
+            reservedName: "atm_access",
+            label: "ATM Access (which network / fee-free etc)",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+            notes: {
+              envelope: 'Unlimited free ATM use at AllPoint',
+              crew: '20 ATM fees reimbursed per year'
+            }
+          },
+          {
+            reservedName: "no_fee_for_card_declined",
+            label: "No fee for card declined",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "modern_ui",
+            label: "Modern UI",
+            og_qube: false,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "ofx_downloads",
+            label: "OFX Downloads (Quicken integration)",
+            og_qube: false,
+            envelope: false,
+            crew: false,
+          },
+          {
+            reservedName: "real_time_accuracy",
+            label: "Real-time accuracy (instant transactions)",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "customer_service_accessibility",
+            label: "Customer Service Accessibility",
+            og_qube: 'Chat during business hours',
+            envelope: 'Extremly fast, even on weekends! "Josh responded faster at 3am than my partner does at 3pm" - <a href="https://help.envelopebudgeting.com/en/articles/12123294-envelope-faq-for-qube-users#h_81e2927725">source</a>',
+            crew: '(needs research)'
+          },
+          {
+            reservedName: "community_support",
+            label: "Community Support",
+            og_qube: 'Going through stages of grief since OG Qube money is "on pause" since Qube lost their sponsor bank. For casual discussions Qube Money has a Facebook group (find the link the <a href="qube-money.html">Qube Money overview page</a>. You will be banned if you discuss competitors',
+            envelope: 'Friendly! For casual questions check out the Envelope Discord linked at top of <a href="envelope.html">the Envelope overview page</a>. It is fine to mention competitors!',
+            crew: 'Friendly! For casual questions check out the Envelope Discord linked at top of <a href="crew.html">the Crew overview page</a>. It is fine to mention competitors!'
+
+          },
+          {
+            reservedName: "year_app_launched",
+            label: "Year App fully launched.",
+            og_qube: 2021,
+            envelope: 2023,
+            crew: 2024,
+          },
+          {
+            reservedName: "card_type",
+            label: "Card Type",
+            og_qube: 'Visa',
+            envelope: 'Visa',
+            crew: 'MasterCard',
+          },
+
+          {
+            reservedName: "website",
+            label: 'Website',
+            og_qube: '<a href="https://qubemoney.com/">https://qubemoney.com/</a>',
+            envelope: '<a href="https://envelopebudgeting.com/">https://envelopebudgeting.com/</a>',
+            crew: '<a href="https://www.trycrew.com/">https://www.trycrew.com/</a>',
+          },
+          {
+            reservedName: "plaid_integration",
+            label: "Plaid Integration",
+            og_qube: false,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "web",
+            label: "Web",
+            og_qube: true,
+            envelope: false,
+            crew: false,
+            notes:
+            {
+              envelope: 'Coming in maybe a year',
+              crew: 'Coming very soon (like in weeks!)'
+            }
+          },
+          {
+            reservedName: "ios",
+            label: "iOS",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+          },
+          {
+            reservedName: "android",
+            label: "Android",
+            og_qube: true,
+            envelope: true,
+            crew: true,
+            notes: {
+              envelope: 'Android app is in Beta and some of the bugs are being worked out.'
+            }
+          },
+          {
+            reservedName: "unique_selling_proposition",
+            label: "Unique Selling Proposition (USP)",
+            og_qube: false,
+            envelope: "Elegant and simple UX",
+            crew: "Build your own workflow. With custom rules you can do anything! Large team, many features."
+
+          }
+        ]);
+
+        function sortBy(key) {
+          if (sortKey.value === key) {
+            // Toggle sort order between ascending (1) and descending (-1)
+            sortOrders.value[key] = -sortOrders.value[key] || 1;
+          } else {
+            sortKey.value = key;
+            Object.keys(sortOrders.value).forEach(k => {
+              sortOrders.value[k] = (k === key ? 1 : 0);
+            });
+          }
+        }
+
+        const filteredAndSortedFeatures = computed(() => {
+          let filtered = features.value;
+          if (filterText.value.trim()) {
+            const lowerFilter = filterText.value.toLowerCase();
+            filtered = filtered.filter(f => f.label.toLowerCase().includes(lowerFilter));
+          }
+
+          const key = sortKey.value;
+          const order = sortOrders.value[key];
+
+          // If no sort key set or order is zero, return filtered as-is, no sorting
+          if (!key || order === 0) return filtered;
+
+          return [...filtered].sort((a, b) => {
+            if (key === 'label') {
+              return order * a.label.localeCompare(b.label);
+            }
+            const aVal = a[key] ? 1 : 0;
+            const bVal = b[key] ? 1 : 0;
+            return order * (aVal - bVal);
+          });
+        });
+
+        return { filterText, features, filteredAndSortedFeatures, sortBy, sortKey, sortOrders };
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>
