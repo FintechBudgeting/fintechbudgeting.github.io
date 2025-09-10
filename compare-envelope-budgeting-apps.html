@@ -176,15 +176,15 @@
 
 
 
-      .more-link {
-        color: #007acc;
-        cursor: pointer;
-        display: inline-block;
-        margin-top: 0.25em;
-        user-select: none;
-        font-size: 0.8rem;
-        margin-left: 5px;
-      }
+    .more-link {
+      color: #007acc;
+      cursor: pointer;
+      display: inline-block;
+      margin-top: 0.25em;
+      user-select: none;
+      font-size: 0.8rem;
+      margin-left: 5px;
+    }
 
 
 
@@ -325,6 +325,14 @@
         </tr>
       </tbody>
     </table>
+
+    <h2>See Also - other comparisons</h2>
+    <ul>
+      <li>
+        <a href="https://docs.google.com/spreadsheets/d/1WtgYD1JwHS6NMn_1dh55yZ5N_w-KP267cLdn6Cdb0Jw/edit?usp=sharing">Qube
+          - Crew - Envelope - comparison made by mbacas</a>
+      </li>
+    </ul>
   </div>
 
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -386,7 +394,7 @@
       components: { ShowMoreText },
       setup() {
         const filterText = ref('');
-        const visibleColumns = ref(['envelope','crew']); // default selected columns
+        const visibleColumns = ref(['envelope', 'crew']); // default selected columns
 
         const sortKey = ref(''); // do not sort by default
         const sortOrders = ref({
