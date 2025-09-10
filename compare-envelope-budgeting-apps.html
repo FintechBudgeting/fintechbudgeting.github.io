@@ -386,7 +386,7 @@
       components: { ShowMoreText },
       setup() {
         const filterText = ref('');
-        const visibleColumns = ref(['og_qube', 'envelope']); // default selected columns
+        const visibleColumns = ref(['envelope','crew']); // default selected columns
 
         const sortKey = ref(''); // do not sort by default
         const sortOrders = ref({
@@ -628,9 +628,10 @@
             label: "Early Direct Deposit",
             og_qube: false,
             envelope: true,
-            crew: false,
+            crew: true,
             notes: {
-              envelope: '<a href="https://help.envelopebudgeting.com/en/articles/9389710-announcing-early-direct-deposit">Announcing Early Direct Deposit</a>'
+              envelope: '<a href="https://help.envelopebudgeting.com/en/articles/9389710-announcing-early-direct-deposit">Announcing Early Direct Deposit</a>',
+              crew: '<a href="https://discord.com/channels/1411774302860349572/1415055482103791817/1415063474610110515">source</a> - to get that link to work join the Crew discord using link on the <a href="crew.html">Crew page</a>'
             }
           },
 
